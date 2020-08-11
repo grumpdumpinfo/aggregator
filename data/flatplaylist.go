@@ -1,12 +1,14 @@
 package data
 
+import "encoding/json"
+
 // FlattenedPlaylist essentially represents the same type of data as Playlist, but is in a format that's easier to
 // deal with.
 type FlattenedPlaylist struct {
 	PublishedAt string `json:"publishedAt"`
 	Title string `json:"title"`
 	Description string `json:"description"`
-	Thumbnails string `json:"thumbnails"`
+	Thumbnails json.RawMessage `json:"thumbnails"`
 	VideoID string `json:"videoId"`
 	ChannelTitle string `json:"channelTitle"`
 }
@@ -20,6 +22,8 @@ func FlattenedPlaylistsFromPlaylist(playlist Playlist) []FlattenedPlaylist {
 			Title: element.Snippet.Title,
 			Description: element.Snippet.Description,
 			Thumbnails: element.Snippet.Thumbnails,
+			// this right here is the only reason FlattenedPlaylist isn't embedded in playlist
+			// consider changing this
 			VideoID: element.Snippet.ResourceID.VideoID,
 			ChannelTitle: element.Snippet.ChannelTitle,
 		}

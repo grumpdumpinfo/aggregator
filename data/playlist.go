@@ -1,5 +1,7 @@
 package data
 
+import "encoding/json"
+
 type Playlist struct {
 	NextPageToken string `json:"nextPageToken"`
 	PageInfo struct{
@@ -15,7 +17,7 @@ type Playlist struct {
 			Description string `json:"description"`
 			// the thumbnails is a JSON structure too, but I plan to pass it to the frontend unmodified, so parsing it
 			// is a waste of time... probably.
-			Thumbnails string `json:"thumbnails"`
+			Thumbnails json.RawMessage `json:"thumbnails"`
 			ChannelTitle string `json:"channelTitle"`
 			ResourceID struct {
 				VideoID string `json:"videoId"`

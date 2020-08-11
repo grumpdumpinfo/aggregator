@@ -21,7 +21,7 @@ func main() {
 	viper.AddConfigPath("/etc/gdiaggregator")
 
 	viper.SetDefault("APIKey", "")
-	viper.SetDefault("TargetPlaylist", "")
+	viper.SetDefault("TargetPlaylists", "")
 
 	err = viper.ReadInConfig()
 
@@ -32,16 +32,22 @@ func main() {
 	}
 
 	apiKey := viper.GetString("APIKey")
-	targetPlaylist := viper.GetString("TargetPlaylist")
+	targetPlaylists := viper.GetStringSlice("TargetPlaylists")
 
 	// TODO: validate inputs here to end execution early
 	app := App{
-		TargetPlaylist: targetPlaylist,
+		TargetPlaylists: targetPlaylists,
 		APIKey:         apiKey,
 		L:              l,
 	}
 
-	firstPage := string(app.GetPlaylistInfoPage(""))
+	l.Info("getting all playlists first pages",
+		zap.Strings("targetPlaylists", app.TargetPlaylists)	,
+	)
 
-	fmt.Printf(firstPage)
+	pages := app.GetAllPlaylistsPages()
+
+	for _, page := range pages {
+		fmt.Printf("%d\n", len(page.Items))
+	}
 }
