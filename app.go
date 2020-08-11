@@ -16,6 +16,22 @@ type App struct {
 	L *zap.Logger
 }
 
+func (a *App) MergePlaylistsIntoDatabase(playlists []data.FlattenedPlaylist) {
+	// TODO: this part
+}
+
+func (a *App) BuildDatabase() {
+	allPlaylists := a.GetAllPlaylistsPages(time.Second)
+	allPlaylistFlat := data.FlattenedPlaylistsFromPlaylists(allPlaylists)
+	a.MergePlaylistsIntoDatabase(allPlaylistFlat)
+}
+
+func (a *App) UpdateDatabase() {
+	playlists := a.GetAllPlaylistsFirstPage()
+	flat := data.FlattenedPlaylistsFromPlaylists(playlists)
+	a.MergePlaylistsIntoDatabase(flat)
+}
+
 // GetAllPlaylistsFirstPage gets the first 20 items of each playlist in TargetPlaylists
 func (a *App) GetAllPlaylistsFirstPage() []data.Playlist {
 	result := make([]data.Playlist, 0, len(a.TargetPlaylists))
@@ -32,11 +48,11 @@ func (a *App) GetAllPlaylistsFirstPage() []data.Playlist {
 
 // GetAllPlaylistsPages gets every page of every playlist in App
 // In the event of a failed fetch, GetAllPlaylistsPages will return an array of what pages it _could_ retrieve
-func (a *App) GetAllPlaylistsPages() []data.Playlist {
+func (a *App) GetAllPlaylistsPages(delay time.Duration) []data.Playlist {
 	result := make([]data.Playlist, 0, len(a.TargetPlaylists))
 
 	for _, playlist := range a.TargetPlaylists {
-		maybePlaylist := a.GetAllPagesForPlaylist(playlist)
+		maybePlaylist := a.GetAllPagesForPlaylist(playlist, delay)
 		if maybePlaylist != nil {
 			result = append(result, *maybePlaylist)
 		}
@@ -46,8 +62,7 @@ func (a *App) GetAllPlaylistsPages() []data.Playlist {
 }
 
 // GetAllPagesForPlaylist gets every page for a given playlist
-//
-func (a *App) GetAllPagesForPlaylist(playlist string) *data.Playlist {
+func (a *App) GetAllPagesForPlaylist(playlist string, delay time.Duration) *data.Playlist {
 	firstPage := a.GetPlaylistInfoPage(playlist, "")
 
 	if firstPage == nil {
@@ -79,6 +94,8 @@ func (a *App) GetAllPagesForPlaylist(playlist string) *data.Playlist {
 		if nextPageToken == "" {
 			break
 		}
+
+		time.Sleep(delay)
 	}
 
 	return firstPage
@@ -89,11 +106,11 @@ func (a *App) GetAllPagesForPlaylist(playlist string) *data.Playlist {
 func (a *App) GetPlaylistInfoPage(playlist, page string) *data.Playlist {
 	var req string
 	if page == "" {
-		req = fmt.Sprintf("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=20&playlistId=%s&key=%s&Accept=application/json",
+		req = fmt.Sprintf("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=%s&key=%s&Accept=application/json",
 			playlist,
 			a.APIKey)
 	} else {
-		req = fmt.Sprintf("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=20&playlistId=%s&key=%s&pageToken=%s&Accept=application/json",
+		req = fmt.Sprintf("https://www.googleapis.com/youtube/v3/playlistItems?part=snippet&maxResults=50&playlistId=%s&key=%s&pageToken=%s&Accept=application/json",
 			playlist,
 			a.APIKey,
 			page)

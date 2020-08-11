@@ -13,6 +13,22 @@ type FlattenedPlaylist struct {
 	ChannelTitle string `json:"channelTitle"`
 }
 
+func FlattenedPlaylistsFromPlaylists(playlists []Playlist) []FlattenedPlaylist {
+	count := 0
+
+	for _, playlist := range playlists {
+		count += len(playlist.Items)
+	}
+
+	toReturn := make([]FlattenedPlaylist, 0, count)
+
+	for _, playlist := range playlists {
+		toReturn = append(toReturn, FlattenedPlaylistsFromPlaylist(playlist)...)
+	}
+
+	return toReturn
+}
+
 func FlattenedPlaylistsFromPlaylist(playlist Playlist) []FlattenedPlaylist {
 	toReturn := make([]FlattenedPlaylist, 0, len(playlist.Items))
 
